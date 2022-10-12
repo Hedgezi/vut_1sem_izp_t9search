@@ -3,14 +3,24 @@
 #include <ctype.h> // tolower()
 #include <stdbool.h>
 
+/* checkNumbers
+Finds all fitted substrings in checked string
+
+Arguments:
+    int lencs, char checkedstring[]: Length and the string which we will find through and find example string
+    int lenex, char example[]: Length and the string, which we will use to find substrings in the checked string
+
+Returns: 
+
+*/
 void checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
     bool fullyFits;
     for (int i = 0; i < lencs - lenex; i++) {
         fullyFits = true;
         if (checkedstring[i] == example[0]) {
             printf("good %i\n", i);
-            for (int j = 1; j < lenex; j++) {
-                if (checkedstring[i+j] != example[j]) {
+            for (int j = 1; j < lenex; j++) { // if first element of find_substring (example[]) matches some element in checked string, we will check if next chars in checked string matches other chars in example substring
+                if (checkedstring[i+j] != example[j]) { 
                     fullyFits = false;
                     break;
                 }
@@ -22,6 +32,14 @@ void checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
     }
 }
 
+/* translateToNumbers
+Translate given string from letters to numbers, based on old mobile phone's keyboard
+
+Arguments:
+    int len, char given_str[]: Length and the string, that it will translate
+    char number_str[]: The string, to which it will put the translated result
+Returns: nothing
+*/
 void translateToNumbers(int len, char given_str[], char number_str[]) {   
     for (int i = 0; i < len; i++) {
         switch (given_str[i])
@@ -75,6 +93,14 @@ void translateToNumbers(int len, char given_str[], char number_str[]) {
     }
 }
 
+/* charsToLowercase
+Checks the whole string and change uppercase chars to lowercase and writes it back to gived string
+
+Arguments: 
+    int len, char given_str[]: Length and the string, in which we need to lowercase symbols
+
+Returns: nothing
+*/
 void charsToLowercase(int len, char given_str[]) {
     for (int i = 0; i < len; i++) {
         if (given_str[i] >= 'A' && given_str[i] <= 'Z') {
@@ -87,26 +113,24 @@ int main(int argc, char* argv[]) {
     char nameline[101];
     char telline[101];
     char namenumline[101];
+    // checking the number of given arguments in shell
     if (argc == 1) {
         scanf("%100[^\n]%*c", nameline);
         scanf("%100[^\n]%*c", telline);
         charsToLowercase(strlen(nameline), nameline);
         printf("%s, %s\n", nameline, telline);
     }
-    if (argc > 3) {
+    else if (argc > 3) {
         printf("incorrect number of arguments!\n");
     }
     while (scanf("*") != EOF)
     {
-        scanf("%100[^\n]%*c", nameline);
+        scanf("%100[^\n]%*c", nameline); // to not give attention to spaces and start to check new string only after \n
         scanf("%100[^\n]%*c", telline);
         charsToLowercase(strlen(nameline), nameline);
         printf("%s, %s\n", nameline, telline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
         checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1]);
     }
-    // for (int i = 0; i < 101; i++){
-    //     namenumline[i]= ' ';
-    // }
     return 0;
 }
