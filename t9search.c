@@ -129,10 +129,12 @@ int main(int argc, char* argv[]) {
     bool atleastoneentry = false;
     // checking the number of given arguments in shell
     if (argc == 1) {
-        scanf("%100[^\n]%*c", nameline);
-        scanf("%100[^\n]%*c", telline);
-        charsToLowercase(strlen(nameline), nameline);
-        printf("%s, %s\n", nameline, telline);
+        while (scanf("*") != EOF) {
+            scanf("%100[^\n]%*c", nameline);
+            scanf("%100[^\n]%*c", telline);
+            charsToLowercase(strlen(nameline), nameline);
+            printf("%s, %s\n", nameline, telline);
+        }
         return 0;
     }
     else if (argc > 3) {
