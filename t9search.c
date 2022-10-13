@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h> // tolower()
+#include <ctype.h> // tolower(), toupper()
 #include <stdbool.h>
 
 /* checkNumbers
@@ -14,6 +14,7 @@ Returns: bool: true, if found at least one match, false, if none was found
 */
 bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[], char textmode, char textstring[]) {
     bool fullyFits, oneMatch = false;
+    int lastEntry = -10;
     for (int i = 0; i < lencs - lenex; i++) {
         fullyFits = true;
         if (checkedstring[i] == example[0]) {
@@ -23,8 +24,9 @@ bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[], ch
                     break;
                 }
             }
-            if (fullyFits) {
+            if (fullyFits && lastEntry + lenex <= i) {
                 // printf("true good %i\n", i);
+                lastEntry = i;
                 if (textmode == 't') {
                     oneMatch = true;
                     for (int j = 0; j < lenex; j++) {
@@ -124,6 +126,7 @@ int main(int argc, char* argv[]) {
     char nameline[101];
     char telline[101];
     char namenumline[101];
+    bool atleastoneentry = false;
     // checking the number of given arguments in shell
     if (argc == 1) {
         scanf("%100[^\n]%*c", nameline);
@@ -148,11 +151,21 @@ int main(int argc, char* argv[]) {
     {
         scanf("%100[^\n]%*c", nameline); // to not give attention to spaces and start to check new string only after \n
         scanf("%100[^\n]%*c", telline);
+        for (unsigned long int i = 0; i < strlen(telline); i++) {
+            if (telline[i] < '0' || telline[i] > '9') {
+                printf("incorrect input data\n");
+                return 0;
+            }
+        }
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
         if (checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1], 't', nameline) || checkNumbers(strlen(telline), telline, strlen(argv[1]), argv[1], 'n', "")){
             printf("%s, %s\n", nameline, telline);
+            atleastoneentry = true;
         }
+    }
+    if (!atleastoneentry) {
+        printf("Not found\n");
     }
     return 0;
 }
