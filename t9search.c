@@ -9,16 +9,14 @@ Finds all fitted substrings in checked string
 Arguments:
     int lencs, char checkedstring[]: Length and the string which we will find through and find example string
     int lenex, char example[]: Length and the string, which we will use to find substrings in the checked string
-
-Returns: 
-
+    char textmode, char textstring[]: if charmode == 't', than it will uppercase fitted substrings in textstring[]
+Returns: bool: true, if found at least one match, false, if none was found
 */
-void checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
-    bool fullyFits;
+bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[], char textmode, char textstring[]) {
+    bool fullyFits, oneMatch = false;
     for (int i = 0; i < lencs - lenex; i++) {
         fullyFits = true;
         if (checkedstring[i] == example[0]) {
-            printf("good %i\n", i);
             for (int j = 1; j < lenex; j++) { // if first element of find_substring (example[]) matches some element in checked string, we will check if next chars in checked string matches other chars in example substring
                 if (checkedstring[i+j] != example[j]) { 
                     fullyFits = false;
@@ -26,10 +24,23 @@ void checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
                 }
             }
             if (fullyFits) {
-                printf("true good %i\n", i);
+                // printf("true good %i\n", i);
+                if (textmode == 't') {
+                    oneMatch = true;
+                    for (int j = 0; j < lenex; j++) {
+                        textstring[i+j] = toupper(textstring[i+j]);
+                    }
+                }
+                else {
+                    return true;
+                }
             }
         }
     }
+    if (oneMatch) {
+        return true;
+    }
+    else {return false;}
 }
 
 /* translateToNumbers
@@ -119,18 +130,29 @@ int main(int argc, char* argv[]) {
         scanf("%100[^\n]%*c", telline);
         charsToLowercase(strlen(nameline), nameline);
         printf("%s, %s\n", nameline, telline);
+        return 0;
     }
     else if (argc > 3) {
         printf("incorrect number of arguments!\n");
+        return 0;
+    }
+    else { // checking if given argument is number
+        for (unsigned long int i = 0; i < strlen(argv[1]); i++) {
+            if (argv[1][i] < '0' || argv[1][i] > '9') {
+                printf("given argument isn't a number (\n");
+                return 0;
+            }
+        }
     }
     while (scanf("*") != EOF)
     {
         scanf("%100[^\n]%*c", nameline); // to not give attention to spaces and start to check new string only after \n
         scanf("%100[^\n]%*c", telline);
         charsToLowercase(strlen(nameline), nameline);
-        printf("%s, %s\n", nameline, telline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
-        checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1]);
+        if (checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1], 't', nameline) || checkNumbers(strlen(telline), telline, strlen(argv[1]), argv[1], 'n', "")){
+            printf("%s, %s\n", nameline, telline);
+        }
     }
     return 0;
 }
