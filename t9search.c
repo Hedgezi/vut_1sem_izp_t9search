@@ -4,45 +4,27 @@
 #include <stdbool.h>
 
 /* checkNumbers
-Finds all fitted substrings in checked string
+Finds all fitted letters from substring in checked string, even if they have any symbols between them
 
 Arguments:
     int lencs, char checkedstring[]: Length and the string which we will find through and find example string
     int lenex, char example[]: Length and the string, which we will use to find substrings in the checked string
-    char textmode, char textstring[]: if charmode == 't', than it will uppercase fitted substrings in textstring[]
 Returns: bool: true, if found at least one match, false, if none was found
 */
-bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[], char textmode, char textstring[]) {
-    bool fullyFits, oneMatch = false;
-    int lastEntry = -10;
-    for (int i = 0; i < lencs - lenex; i++) {
-        fullyFits = true;
-        if (checkedstring[i] == example[0]) {
-            for (int j = 1; j < lenex; j++) { // if first element of find_substring (example[]) matches some element in checked string, we will check if next chars in checked string matches other chars in example substring
-                if (checkedstring[i+j] != example[j]) { 
-                    fullyFits = false;
-                    break;
-                }
-            }
-            if (fullyFits && lastEntry + lenex <= i) {
-                // printf("true good %i\n", i);
-                lastEntry = i;
-                if (textmode == 't') {
-                    oneMatch = true;
-                    for (int j = 0; j < lenex; j++) {
-                        textstring[i+j] = toupper(textstring[i+j]);
-                    }
-                }
-                else {
-                    return true;
-                }
-            }
+bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
+    int cursymbolinex = 0;
+    for (int i = 0; i < lencs; i++) {
+        if (cursymbolinex == lenex) {
+            return true;
+        }
+        if (checkedstring[i] == example[cursymbolinex]) {
+            cursymbolinex++;
         }
     }
-    if (oneMatch) {
-        return true;
+    if (cursymbolinex == lenex) {
+            return true;
     }
-    else {return false;}
+    return false;
 }
 
 /* translateToNumbers
@@ -161,7 +143,7 @@ int main(int argc, char* argv[]) {
         }
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
-        if (checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1], 't', nameline) || checkNumbers(strlen(telline), telline, strlen(argv[1]), argv[1], 'n', "")){
+        if (checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1]) || checkNumbers(strlen(telline), telline, strlen(argv[1]), argv[1])){
             printf("%s, %s\n", nameline, telline);
             atleastoneentry = true;
         }
