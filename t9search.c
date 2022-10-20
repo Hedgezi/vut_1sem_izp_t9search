@@ -1,40 +1,17 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <ctype.h> // tolower(), toupper()
 #include <stdbool.h>
-#include <unistd.h>
+// #define log fprintf(stderr,)
 #define max(a,b) (a > b)? a : b
 
-/* checkNumbers
-Finds all fitted letters from substring in checked string, even if they have any symbols between them
-
-Arguments:
-    int lencs, char checkedstring[]: Length and the string which we will find through and find example string
-    int lenex, char example[]: Length and the string, which we will use to find substrings in the checked string
-Returns: bool: true, if found at least one match, false, if none was found
-*/
-bool checkNumbers(int lencs, char checkedstring[], int lenex, char example[]) {
-    int cursymbolinex = 0;
-    for (int i = 0; i < lencs; i++) {
-        if (cursymbolinex == lenex) {
-            return true;
-        }
-        if (checkedstring[i] == example[cursymbolinex]) {
-            cursymbolinex++;
-        }
-    }
-    if (cursymbolinex == lenex) {
-            return true;
-    }
-    return false;
-}
-
 /* lcsfunc
-Finds longest common subsequence
+Finds longest common subsequence, using methods of dynamic programming
 
 Arguments:
     int lencs, char checkedstring[], int lenex, char example[]: 2 lengths and 2 strings for which we will find LCS
-Returns: 
+Returns: int: longest common subsequence
 */
 int lcsfunc(int lencs, char checkedstring[], int lenex, char example[]) {
     int lcs[lencs+1][lenex+1];
@@ -53,8 +30,24 @@ int lcsfunc(int lencs, char checkedstring[], int lenex, char example[]) {
     return lcs[lencs][lenex];
 }
 
-bool levenstein(int lencs, char checkedstring[], int lenex, char example[], int posserr) {
+bool levenstein(int lencs, char *checkedstring, int lenex, char *example, int posserr) {
     return (lcsfunc(lencs, checkedstring, lenex, example) + posserr >= lenex) ? true : false;
+}
+
+/* checkIsNumber
+This function checks if given string contains only numbers
+
+Arguments:
+    int length, char checkedstring[]: The length and the string, which we will check for containing only numbers
+Returns: bool: false, if string contains something besides numbers, true, if it consists of numbers
+*/
+bool checkIsNumber(int length, char checkedstring[]) {
+    for (int i = 0; i < length; i++) {
+        if (checkedstring[i] < '0' || checkedstring[i] > '9') {
+            return false;
+        }
+    }
+    return true;
 }
 
 /* translateToNumbers
@@ -62,7 +55,7 @@ Translate given string from letters to numbers, based on old mobile phone's keyb
 
 Arguments:
     int len, char given_str[]: Length and the string, that it will translate
-    char number_str[]: The string, to which it will put the translated result
+    char number_str[]: The string, in which it will put the translated result
 Returns: nothing
 */
 void translateToNumbers(int len, char given_str[], char number_str[]) {   
@@ -138,8 +131,11 @@ int main(int argc, char* argv[]) {
     char nameline[101];
     char telline[101];
     char namenumline[101];
-    int posserr = 2;
+    int posserr = 0;
+    char *pexample;
+    int lenexample;
     bool atleastoneentry = false;
+
     // checking the number of given arguments in shell
     if (argc == 1) {
         while (scanf("*") != EOF) {
@@ -150,39 +146,47 @@ int main(int argc, char* argv[]) {
         }
         return 0;
     }
-    else if (argc > 3) {
-        printf("incorrect number of arguments!\n");
-        return 0;
+    else if (argc == 3 || argc > 4) {
+        fprintf(stderr, "incorrect number of arguments! (use -l L, where L some int number)\n");
+        return 1;
     }
-    else { // checking if given argument is number
-        for (unsigned long int i = 0; i < strlen(argv[1]); i++) {
-            if (argv[1][i] < '0' || argv[1][i] > '9') {
-                printf("given argument isn't a number (\n");
-                return 0;
-            }
+    if (argc == 2 && !checkIsNumber(strlen(argv[1]), argv[1])) {
+        fprintf(stderr, "given argument must be a number!");
+        return 1;
+    }
+    else {
+        pexample = argv[1];
+        lenexample = strlen(argv[1]);
+    }
+    if (argc == 4) {
+        if (strcmp(argv[1], "-l") == 0 && checkIsNumber(strlen(argv[2]), argv[2]) && checkIsNumber(strlen(argv[3]), argv[3])) {
+            pexample = argv[3];
+            lenexample = strlen(argv[3]);
+            posserr = atoi(argv[2]);
+        }
+        else if (strcmp(argv[2], "-l") == 0 && checkIsNumber(strlen(argv[1]), argv[1]) && checkIsNumber(strlen(argv[3]), argv[3])) {
+            pexample = argv[1];
+            lenexample = strlen(argv[1]);
+            posserr = atoi(argv[3]);
+        }
+        else {
+            fprintf(stderr, "incorrect usage of arguments! (specify L (num of possible errors) after -l)\n");
+            return 1;
         }
     }
+
     while (scanf("*") != EOF)
     {
         scanf("%100[^\n]%*c", nameline); // to not give attention to spaces and start to check new string only after \n
         scanf("%100[^\n]%*c", telline);
-        for (unsigned long int i = 0; i < strlen(telline); i++) {
-            if (telline[i] < '0' || telline[i] > '9') {
-                printf("incorrect input data\n");
-                return 0;
-            }
-        }
+        
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
-        fprintf(stderr, ": %s\n", namenumline);
-        if (checkNumbers(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1]) || checkNumbers(strlen(telline), telline, strlen(argv[1]), argv[1])){
+        fprintf(stderr, "ntoi: %s\n", namenumline);
+        if (levenstein(strlen(namenumline), namenumline, lenexample, pexample, posserr) || levenstein(strlen(telline), telline, lenexample, pexample, posserr)){
             printf("%s, %s\n", nameline, telline);
             atleastoneentry = true;
         }
-        if (levenstein(strlen(namenumline), namenumline, strlen(argv[1]), argv[argc-1], posserr) || levenstein(strlen(telline), telline, strlen(argv[1]), argv[1], posserr)){
-            printf("%s, %s\n", nameline, telline);
-            atleastoneentry = true;
-        }        
     }
     if (!atleastoneentry) {
         printf("Not found\n");
