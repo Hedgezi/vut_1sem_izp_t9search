@@ -197,7 +197,6 @@ int main(int argc, char* argv[]) {
         }
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
-        printf(": %s\n", namenumline);
         if (levenstein(strlen(namenumline), namenumline, lenexample, pexample, posserr) || levenstein(strlen(telline), telline, lenexample, pexample, posserr)){
             printf("%s, %s\n", nameline, telline);
             atleastoneentry = true;
