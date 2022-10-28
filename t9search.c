@@ -5,6 +5,11 @@
 #include <stdbool.h>
 #define max(a,b) (a > b)? a : b
 
+/* xvoron03
+https://github.com/Hedgezi/t9search
+Hledání přerušených posloupností znaků bez parametru -s.
+*/
+
 /* lcsfunc
 Finds longest common subsequence, using methods of dynamic programming
 
@@ -44,11 +49,15 @@ This function checks if given string contains only numbers
 
 Arguments:
     int length, char checkedstring[]: The length and the string, which we will check for containing only numbers
+    bool plusIncluded: Does it counts that number can contain plus too
 Returns: bool: false, if string contains something besides numbers, true, if it consists of numbers
 */
 bool checkIsNumber(int length, char checkedstring[], bool plusIncluded) {
-    for (int i = 0; i < length; i++) {
-        if (checkedstring[i] < '0' || checkedstring[i] > '9' || (plusIncluded && checkedstring[i] == '+')) {
+    if (plusIncluded && !((checkedstring[0] > '0' && checkedstring[0] < '9') || checkedstring[0] == '+')) { // plus must be only on start of phone number
+        return false;
+    }
+    for (int i = 1; i < length; i++) {
+        if (checkedstring[i] < '0' || checkedstring[i] > '9') {
             return false;
         }
     }
@@ -140,17 +149,19 @@ int main(int argc, char* argv[]) {
     char telline[102];
     char namenumline[101];
     int posserr = 0;
-    char *pexample;
+    char *pexample; // pointer to argument, that contains example string
     int lenexample;
     bool atleastoneentry = false;
 
     // checking the number of given arguments in shell
-    if (argc == 1) {
+    if (argc == 1) { // if 1 argument just show every contact in file
         while (scanf("*") != EOF) {
-            scanf("%101[^\n]\n", nameline); // to not give attention to spaces and start to check new string only after \n
-            scanf("%101[^\n]\n", telline);
+            if (scanf("%101[^\n]\n", nameline) == EOF || scanf("%101[^\n]\n", telline) == EOF) {
+                fprintf(stderr, "(error) contact have only number or name\n");
+                return 2;
+            }
             if (strlen(nameline) == 101 || strlen(telline) == 101) {
-                fprintf(stderr, "too long contact (max 100 symbols)\n");
+                fprintf(stderr, "(error) too long contact (max 100 symbols)\n");
                 return 3;
             }
             charsToLowercase(strlen(nameline), nameline);
@@ -158,42 +169,51 @@ int main(int argc, char* argv[]) {
         }
         return 0;
     }
-    else if (argc == 3 || argc > 4) {
-        fprintf(stderr, "incorrect arguments! (use -l L, where L some int number)\n");
+    else if (argc == 3 || argc > 4) { // if count of arguments is incorrect
+        fprintf(stderr, "(error) incorrect arguments! (use -l L, where L some int number)\n");
         return 1;
     }
-    if (argc == 2 && !checkIsNumber(strlen(argv[1]), argv[1], true)) {
-        fprintf(stderr, "given argument must be a number!\n");
+    if (argc == 2 && !checkIsNumber(strlen(argv[1]), argv[1], false)) {
+        fprintf(stderr, "(error) given argument must be a number!\n");
         return 1;
     }
     else {
         pexample = argv[1];
         lenexample = strlen(argv[1]);
     }
-    if (argc == 4) {
-        if (strcmp(argv[1], "-l") == 0 && checkIsNumber(strlen(argv[2]), argv[2], false) && checkIsNumber(strlen(argv[3]), argv[3], true)) {
+    if (argc == 4) { // checking where argument -l in given arguments
+        if (strcmp(argv[1], "-l") == 0 && checkIsNumber(strlen(argv[2]), argv[2], false) && checkIsNumber(strlen(argv[3]), argv[3], false)) {
             pexample = argv[3];
             lenexample = strlen(argv[3]);
             posserr = atoi(argv[2]);
         }
-        else if (strcmp(argv[2], "-l") == 0 && checkIsNumber(strlen(argv[1]), argv[1], true) && checkIsNumber(strlen(argv[3]), argv[3], false)) {
+        else if (strcmp(argv[2], "-l") == 0 && checkIsNumber(strlen(argv[1]), argv[1], false) && checkIsNumber(strlen(argv[3]), argv[3], false)) {
             pexample = argv[1];
             lenexample = strlen(argv[1]);
             posserr = atoi(argv[3]);
         }
         else {
-            fprintf(stderr, "incorrect usage of arguments! (specify L (num of possible errors) after -l)\n");
+            fprintf(stderr, "(error) incorrect usage of arguments! (specify L (num of possible errors) after -l)\n");
             return 1;
         }
     }
 
     while (scanf("*") != EOF)
     {
-        scanf("%101[^\n]\n", nameline); // to not give attention to spaces and start to check new string only after \n
-        scanf("%101[^\n]\n", telline);
+        if (scanf("%101[^\n]\n", nameline) == EOF || scanf("%101[^\n]\n", telline) == EOF) {
+            fprintf(stderr, "(error) contact have only number or name\n");
+            return 2;
+        }
         if (strlen(nameline) == 101 || strlen(telline) == 101) {
-            fprintf(stderr, "too long contact (max 100 symbols)\n");
-            return 3;
+            fprintf(stderr, "(error) too long contact (max 100 symbols)\n");
+            return 2;
+        }
+        if (strlen(nameline) < strlen(pexample) && strlen(nameline) < strlen(pexample)) { // if given example string longer than contact
+            continue; 
+        }
+        if (!checkIsNumber(strlen(telline), telline, true)) {
+            fprintf(stderr, "(error) phone number contains not only numbers or plus on start\n");
+            return 2;
         }
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
@@ -202,7 +222,7 @@ int main(int argc, char* argv[]) {
             atleastoneentry = true;
         }
     }
-    if (!atleastoneentry) {
+    if (!atleastoneentry) { // if we haven't found any fitted contacts
         printf("Not found\n");
     }
     return 0;
