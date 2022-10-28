@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <ctype.h> // tolower(), toupper()
 #include <stdbool.h>
-// #define log fprintf(stderr,)
 #define max(a,b) (a > b)? a : b
 
 /* lcsfunc
@@ -26,10 +25,16 @@ int lcsfunc(int lencs, char checkedstring[], int lenex, char example[]) {
             lcs[i][j] = (checkedstring[i-1] == example[j-1]) ? lcs[i-1][j-1] + 1 : max(lcs[i-1][j], lcs[i][j-1]);
         }
     }
-    fprintf(stderr, "lcs: %i\n", lcs[lencs][lenex]);
     return lcs[lencs][lenex];
 }
 
+/* levenstein
+This function checks if checked string matches an example or if posserr was given, count it
+
+Arguments:
+    int lencs, char *checkedstring, int lenex, char *example: 2 lengths and 2 strings for which we will check if it fits matched arguments
+Returns: bool: true, if fits, false if doesn't
+*/
 bool levenstein(int lencs, char *checkedstring, int lenex, char *example, int posserr) {
     return (lcsfunc(lencs, checkedstring, lenex, example) + posserr >= lenex) ? true : false;
 }
@@ -41,9 +46,9 @@ Arguments:
     int length, char checkedstring[]: The length and the string, which we will check for containing only numbers
 Returns: bool: false, if string contains something besides numbers, true, if it consists of numbers
 */
-bool checkIsNumber(int length, char checkedstring[]) {
+bool checkIsNumber(int length, char checkedstring[], bool plusIncluded) {
     for (int i = 0; i < length; i++) {
-        if (checkedstring[i] < '0' || checkedstring[i] > '9') {
+        if (checkedstring[i] < '0' || checkedstring[i] > '9' || (plusIncluded && checkedstring[i] == '+')) {
             return false;
         }
     }
@@ -104,6 +109,9 @@ void translateToNumbers(int len, char given_str[], char number_str[]) {
         case 'z':
             number_str[i] = '9';
             break;
+        case '+':
+            number_str[i] = '0';
+            break;
         default:
             number_str[i] = given_str[i];
             break;
@@ -128,8 +136,8 @@ void charsToLowercase(int len, char given_str[]) {
 }
 
 int main(int argc, char* argv[]) {
-    char nameline[101];
-    char telline[101];
+    char nameline[102];
+    char telline[102];
     char namenumline[101];
     int posserr = 0;
     char *pexample;
@@ -139,19 +147,23 @@ int main(int argc, char* argv[]) {
     // checking the number of given arguments in shell
     if (argc == 1) {
         while (scanf("*") != EOF) {
-            scanf("%100[^\n]%*c", nameline);
-            scanf("%100[^\n]%*c", telline);
+            scanf("%101[^\n]\n", nameline); // to not give attention to spaces and start to check new string only after \n
+            scanf("%101[^\n]\n", telline);
+            if (strlen(nameline) == 101 || strlen(telline) == 101) {
+                fprintf(stderr, "too long contact (max 100 symbols)\n");
+                return 3;
+            }
             charsToLowercase(strlen(nameline), nameline);
             printf("%s, %s\n", nameline, telline);
         }
         return 0;
     }
     else if (argc == 3 || argc > 4) {
-        fprintf(stderr, "incorrect number of arguments! (use -l L, where L some int number)\n");
+        fprintf(stderr, "incorrect arguments! (use -l L, where L some int number)\n");
         return 1;
     }
-    if (argc == 2 && !checkIsNumber(strlen(argv[1]), argv[1])) {
-        fprintf(stderr, "given argument must be a number!");
+    if (argc == 2 && !checkIsNumber(strlen(argv[1]), argv[1], true)) {
+        fprintf(stderr, "given argument must be a number!\n");
         return 1;
     }
     else {
@@ -159,12 +171,12 @@ int main(int argc, char* argv[]) {
         lenexample = strlen(argv[1]);
     }
     if (argc == 4) {
-        if (strcmp(argv[1], "-l") == 0 && checkIsNumber(strlen(argv[2]), argv[2]) && checkIsNumber(strlen(argv[3]), argv[3])) {
+        if (strcmp(argv[1], "-l") == 0 && checkIsNumber(strlen(argv[2]), argv[2], false) && checkIsNumber(strlen(argv[3]), argv[3], true)) {
             pexample = argv[3];
             lenexample = strlen(argv[3]);
             posserr = atoi(argv[2]);
         }
-        else if (strcmp(argv[2], "-l") == 0 && checkIsNumber(strlen(argv[1]), argv[1]) && checkIsNumber(strlen(argv[3]), argv[3])) {
+        else if (strcmp(argv[2], "-l") == 0 && checkIsNumber(strlen(argv[1]), argv[1], true) && checkIsNumber(strlen(argv[3]), argv[3], false)) {
             pexample = argv[1];
             lenexample = strlen(argv[1]);
             posserr = atoi(argv[3]);
@@ -177,12 +189,15 @@ int main(int argc, char* argv[]) {
 
     while (scanf("*") != EOF)
     {
-        scanf("%100[^\n]%*c", nameline); // to not give attention to spaces and start to check new string only after \n
-        scanf("%100[^\n]%*c", telline);
-        
+        scanf("%101[^\n]\n", nameline); // to not give attention to spaces and start to check new string only after \n
+        scanf("%101[^\n]\n", telline);
+        if (strlen(nameline) == 101 || strlen(telline) == 101) {
+            fprintf(stderr, "too long contact (max 100 symbols)\n");
+            return 3;
+        }
         charsToLowercase(strlen(nameline), nameline);
         translateToNumbers(strlen(nameline), nameline, namenumline);
-        fprintf(stderr, "ntoi: %s\n", namenumline);
+        printf(": %s\n", namenumline);
         if (levenstein(strlen(namenumline), namenumline, lenexample, pexample, posserr) || levenstein(strlen(telline), telline, lenexample, pexample, posserr)){
             printf("%s, %s\n", nameline, telline);
             atleastoneentry = true;
